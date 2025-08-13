@@ -1,0 +1,1 @@
+Observações e licoes aprendidas sobre o projeto
