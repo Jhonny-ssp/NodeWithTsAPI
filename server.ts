@@ -1,8 +1,14 @@
-// const fastify = require('fastify')
-// const crypto = require('crypto')
+import { fastifySwagger } from "@fastify/swagger"
+import { fastifySwaggerUi } from '@fastify/swagger-ui'
+import { validatorCompiler, serializerCompiler, type ZodTypeProvider, jsonSchemaTransform } from "fastify-type-provider-zod"
 
 import fastify from "fastify"
-import crypto from "node:crypto"
+
+import { createCourseRoute } from "./src/routes/create-course.ts"
+import { getCourseByIdRoute } from "./src/routes/get-course-by-id.ts"
+import { getCoursesRoute } from "./src/routes/get-courses.ts"
+
+import scalarAPIReference from "@scalar/fastify-api-reference"
 // node: importacao ==> Padrão para imports do node nativamente, sem instalacao por fora
 
 // Esse objeto logger serve para deixar os logs mais "legiveis" e detalhados no terminal
@@ -16,45 +22,31 @@ const server = fastify({
             },
         },
     }
-})
+}).withTypeProvider<ZodTypeProvider>()
 
-const courses = [
-     {id: "1", title: "Curso de node"},
-     {id: "2", title: "Curso de React"},
-     {id: "3", title: "Curso de PHP"}
-]
+if(process.env.NODE_ENV === 'development') {
+        server.register(fastifySwagger, {
+        openapi: {
+            info: {
+                title: "Desafio Node.js",
+                version: '1.0.0'
+            }
+        },
 
-// Em metodos HTTP, SEMPRE RETORNAR UM OBJETO
-server.get("/courses", () => {
-    return { courses }
-})
+        transform: jsonSchemaTransform
+    })  
 
-server.get("/courses/:id", (request, reply) => {
+    server.register(scalarAPIReference, {
+        routePrefix: '/reference',
+    })
+}
 
-    const courseId = request.params.id
+server.setSerializerCompiler(serializerCompiler) 
+server.setValidatorCompiler(validatorCompiler) // Valida os metodos HTTP
 
-    const course = courses.find(course => course.id === courseId )
-
-    if(course) {
-        return course
-    }
-
-    return reply.status(404).send()
-})
-
-server.post("/courses", (request, reply) => {
-    const courseId = crypto.randomUUID()
-    const courseTitle = request.body.title
-
-    if(!courseTitle) {
-        return reply.statusCode(400).send( {message: "Titulo obrigatório"})
-    }
-
-    courses.push( {id: courseId, courseTitle} )
-
-    return reply.status(201).send({courseId})
-})
-
+server.register(createCourseRoute)
+server.register(getCourseByIdRoute)
+server.register(getCoursesRoute)
 
 server.listen({port: 3333}).then(() => {
     console.log("Servidor rodando")

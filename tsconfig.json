@@ -7,6 +7,9 @@
     "lib": ["es2024", "ESNext.Array", "ESNext.Collection", "ESNext.Iterator", "ESNext.Promise"],
     "module": "nodenext",
     "target": "es2024",
+    "allowImportingTsExtensions": true,
+    "noEmit": true, // Nao vou compilar o cod, estou usando o TS apenas para checagem de tipos, 
+    //o node 22 ja tem suporte a TS
 
     "strict": true,
     "esModuleInterop": true,
